@@ -118,7 +118,7 @@ Swagger UI: https://finance-dashboard-system-backend-production.up.railway.app/s
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/yourusername/finance-dashboard-backend.git
+git clone https://github.com/MOHDJUNAID70/Finance-System---Spring-Boot.git
 cd finance-dashboard-backend
 ```
 
