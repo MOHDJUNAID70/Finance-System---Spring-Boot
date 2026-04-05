@@ -42,7 +42,7 @@ public class SwaggerConfig {
                                 " and include it in the Authorization header."))
                 .servers(
                         List.of(
-                                new Server().url("https://finance-dashboard-system-backend-production.up.railway.app/swagger-ui/index.html").description("Financial Dashboard Server"),
+                                new Server().url("https://finance-dashboard-system-backend-production.up.railway.app").description("Financial Dashboard Server"),
                                 new Server().url("http://localhost:9090").description("Finance Dashboard System")
                         ))
                 ;
