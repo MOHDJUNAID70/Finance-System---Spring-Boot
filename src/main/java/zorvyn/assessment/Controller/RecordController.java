@@ -30,7 +30,6 @@ public class RecordController {
     private RecordService recordService;
 
     @GetMapping("/All_Record")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all financial records with pagination and Filter (Admin only)")
     public Page<RecordResponse> getAllRecords(
             @RequestParam(required = false, defaultValue = "1") int page,
@@ -49,10 +48,10 @@ public class RecordController {
     }
 
     @GetMapping("/all")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Get all financial records (Admin only)")
-    public List<RecordResponse> getAllRecords() {
-        return recordService.getAllRecord();
+    @Operation(summary = "Get all financial records (All Roles). Admin can see all records " +
+            "while Analyst and Viewer can only see their own record")
+    public List<RecordResponse> getAllRecords(Authentication authentication) {
+        return recordService.getAllRecord(authentication.getName());
     }
 
     @PostMapping
@@ -79,8 +78,8 @@ public class RecordController {
     @PutMapping("/updateRecord/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'ANALYST')")
     @Operation(summary = "Update a financial record (Admin, Analyst only)")
-    public ResponseEntity<String> updateRecord(@PathVariable Integer id, @RequestBody RecordRequest recordRequest) {
-        recordService.updateRecord(id, recordRequest);
+    public ResponseEntity<String> updateRecord(@PathVariable Integer id, @RequestBody RecordRequest recordRequest, Authentication authentication) {
+        recordService.updateRecord(id, recordRequest, authentication.getName());
         return new ResponseEntity<>("Record updated successfully", HttpStatus.OK);
     }
 

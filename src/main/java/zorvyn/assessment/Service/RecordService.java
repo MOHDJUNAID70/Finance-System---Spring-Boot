@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -14,6 +15,7 @@ import org.springframework.util.DigestUtils;
 import zorvyn.assessment.DTOs.Request.RecordRequest;
 import zorvyn.assessment.DTOs.Response.RecordResponse;
 import zorvyn.assessment.Enum.RecordType;
+import zorvyn.assessment.Enum.Role;
 import zorvyn.assessment.Exception.CustomException;
 import zorvyn.assessment.Idempotency.IdempotencyKey;
 import zorvyn.assessment.Idempotency.IdempotencyRepository;
@@ -44,11 +46,25 @@ public class RecordService {
     @Autowired
     private IdempotencyRepository idempotencyRepository;
 
-    public List<RecordResponse> getAllRecord() {
+    public List<RecordResponse> getAllRecord(String email) {
+
+        Users user=userRepository.findByEmail(email).orElseThrow(
+                ()-> new CustomException("Please register yourself first to see your activity"));
+
+        if(user.getRole() == Role.ANALYST || user.getRole() == Role.VIEWER){
+            List<Record> records=recordRepository.findByCreatedBy(user);
+
+            if(records.isEmpty()) {
+                throw new CustomException("No records found");
+            }
+            return records.stream().map(recordResponseMapper::toRecordResponse).toList();
+        }
         List<Record> records = recordRepository.findAll();
+
         if(records.isEmpty()) {
             throw new CustomException("No records found");
         }
+
         return records.stream().map(recordResponseMapper::toRecordResponse).toList();
     }
 
@@ -138,9 +154,17 @@ public class RecordService {
     }
 
     @Transactional
-    public void updateRecord(Integer id, RecordRequest recordRequest) {
+    public void updateRecord(Integer id, RecordRequest recordRequest, String name) {
         Record record=recordRepository.findById(id)
                 .orElseThrow(()->new  CustomException("No record exists with this ID "+id));
+
+        Users currentUser=userRepository.findByEmail(name)
+                .orElseThrow(()-> new CustomException("You are not authorized to perform this operation"));
+
+        if(currentUser.getRole() == Role.ANALYST && !Objects.equals(record.getCreatedBy().getEmail(), name)){
+            throw new CustomException("You can only update your own records");
+        }
+
         if(record.isDeleted()){
             throw new CustomException("This record is deleted and cannot be updated");
         }

@@ -44,7 +44,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-            String ip=request.getRemoteAddr();
+            String ip=request.getHeader("X-Forwarded-For") != null
+                    ? request.getHeader("X-Forwarded-For").split(",")[0].trim()
+                    : request.getRemoteAddr();
             String path = request.getRequestURI();
 
             Bucket bucket;
